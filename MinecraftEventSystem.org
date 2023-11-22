@@ -1,0 +1,56 @@
+#+title: Minecraft Event System
+#+author: Dylan Garvis
+#+date: <2023-11-21 Tue>
+
+* Overview
+The primary goal of this system is to tie together the in game chat between seperate minecraft servers.
+To acomplish this, an event system is implemented that focus on chat messages and server join events
+in the first version, however, could easily be expanded to have more events added or other applications
+listening.
+
+* Architecture
+The system is made up of two parts
+- Messaging Bus :: Kafka is used as the messaging bus and handles queues that severs can publish and 
+  subscribe to.
+- Spigot Plugin :: This is a java plugin that publishes events into the messages bus and listens to events
+  to react to them.
+- BungeeCord Plugin :: This is a java plugin that publishes events into the message for bungeecord.
+
+** Types of Messages
+In this inital implementation, there are two types of messages:
+- ChatMessagePublished :: Message is published when a player sends a message.
+  #+begin_src json 
+  {
+    "eventType": "CHAT_MESSAGE_PUBLISHED",
+    "server": "string",
+    "playerUUID": "string",
+    "playerName": "string",
+    "message": "string"
+  }
+  #+end_src
+- PlayerJoinedServer :: Message is published when a player connects to a specific server.
+  #+begin_src
+  {
+    "eventType": "PLAYER_JOINED_SERVER",
+    "server": "string",
+    "playerUUID": "string",
+    "playerName": "string"
+  }
+  #+end_src
+- PlayerDisconnected :: Message is published when a player disconnects from a bungeecord network.
+  #+begin_src
+  {
+    "eventType": "PLAYER_DISCONNECTED",
+    "playerUUID": "string",
+    "playerName": "string"
+  }
+  #+end_src
+
+** Plugin Commands
+Interaction with the plugin should be simple, where the jar file itself is just placed within the plugin directory
+for bukkit.
+
+From within the game, an op level user may use the following commands:
+- /mcevents connect <server name> <kafka url> :: Which will establish the name of the server
+  and connect to the kafka system to publish and listen for messages.
+- /mcevents disconnect :: which will clear the config.
