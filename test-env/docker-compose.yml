@@ -1,0 +1,46 @@
+version: "3"
+
+services:
+  proxy:
+    image: itzg/bungeecord
+    ports:
+      # Main Game
+      - "25565:25577"
+    volumes:
+      - "./config-files/bungee-config.yml:/server/config.yml"
+      - "./bungee-plugins:/server/plugins"
+    environment:
+      TYPE: BUNGEECORD
+    restart: always
+  world1:
+    image: itzg/minecraft-server
+    restart: always
+    volumes:
+      - "./config-files/world1-bukkit.yml:/data/bukkit.yml"
+      - "./config-files/world1-spigot.yml:/data/spigot.yml"
+      - "./world1-plugins:/data/plugins"
+    environment:
+      EULA: "TRUE"
+      TYPE: "SPIGOT"
+      VERSION: "1.20.1"
+      MEMORY: 3G
+      OPS: "WindMagi"
+      ONLINE_MODE: "FALSE"
+      LEVEL: world
+  world2:
+    image: itzg/minecraft-server
+    restart: always
+    volumes:
+      - "./config-files/world2-bukkit.yml:/data/bukkit.yml"
+      - "./config-files/world2-spigot.yml:/data/spigot.yml"
+      - "./world2-plugins:/data/plugins"
+    environment:
+      EULA: "TRUE"
+      TYPE: "SPIGOT"
+      VERSION: "1.20.1"
+      MEMORY: 3G
+      OPS: "WindMagi"
+      ONLINE_MODE: "FALSE"
+      LEVEL: world
+
+#volumes:
