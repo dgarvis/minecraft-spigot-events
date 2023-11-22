@@ -1,3 +1,4 @@
 name: MCESSpigotPlugin
 version: 1.0
 main: dev.garvis.mcesspigot.MCESSpigotPlugin
+api-version: 1.20
