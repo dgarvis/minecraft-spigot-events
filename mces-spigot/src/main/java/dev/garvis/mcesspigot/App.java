@@ -1,4 +1,4 @@
-package dev.garvis.minecrafteventsystem;
+package dev.garvis.mcesspigot;
 
 /**
  * Hello world!
