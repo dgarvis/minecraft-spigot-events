@@ -1,5 +1,9 @@
 #!/bin/sh
 
+loc=$(dirname "$0")
+
+cd $loc
+
 cp mces-spigot/target/mces-spigot-1.0-SNAPSHOT.jar test-env/world1-plugins/
 cp mces-spigot/target/mces-spigot-1.0-SNAPSHOT.jar test-env/world2-plugins/
 
