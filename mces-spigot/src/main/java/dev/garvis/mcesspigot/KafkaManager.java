@@ -6,6 +6,14 @@ import org.apache.kafka.common.serialization.StringSerializer;
 
 import java.util.Properties;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.io.IOException;
+import java.util.Map;
+
+
 public class KafkaManager {
 
     private KafkaProducer<String, String> producer;
@@ -58,6 +66,25 @@ public class KafkaManager {
 	// send data - asynchronous
         this.producer.send(producerRecord);
 
+	System.out.println("Message Sent: " + message);
+	
 	return true;
+    }
+
+    public boolean sendMessage(Map<String, String> m) {
+	ObjectMapper mapper = new ObjectMapper();
+	String json;
+	
+	try {
+	    json = mapper.writeValueAsString(m);
+	} catch (JsonGenerationException e) {
+	    return false;
+	} catch (JsonMappingException e) {
+	    return false;
+	} catch (IOException e) {
+	    return false;
+	}
+
+	return this.sendMessage(json);
     }
 }

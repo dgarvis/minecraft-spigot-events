@@ -1,0 +1,2 @@
+kafkaServer: "kafka:9092"
+serverName: "World"
