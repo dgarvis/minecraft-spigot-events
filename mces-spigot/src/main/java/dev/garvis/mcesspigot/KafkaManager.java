@@ -1,8 +1,10 @@
 package dev.garvis.mcesspigot;
 
 import org.apache.kafka.clients.producer.*;
-import org.apache.kafka.common.serialization.LongSerializer;
+import org.apache.kafka.clients.consumer.*;
+//import org.apache.kafka.common.serialization.LongSerializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.apache.kafka.common.serialization.StringDeserializer;
 
 import java.util.Properties;
 
@@ -12,11 +14,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.List;
+import java.util.LinkedList;
+import java.time.Duration;
 
 
 public class KafkaManager {
 
     private KafkaProducer<String, String> producer;
+    private KafkaConsumer<String, String> consumer;
 
     public KafkaManager() {
 	this.producer = null;
@@ -26,11 +33,15 @@ public class KafkaManager {
 	if (serverAddress.isEmpty()) {
 	    return false;
 	}
+	
+	return createProducer(serverAddress, clientId) && createConsumer(serverAddress, clientId);
+    }
 
+    private boolean createProducer(String serverAddress, String clientId) {
 	// create Producer properties
 	Properties props = new Properties();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, serverAddress);
-	props.put(ProducerConfig.CLIENT_ID_CONFIG, clientId);
+	props.put(ProducerConfig.CLIENT_ID_CONFIG, clientId.replaceAll("\\s", ""));
 	try {
 	    props.put("key.serializer",
 		      Class.forName("org.apache.kafka.common.serialization.StringSerializer"));
@@ -42,7 +53,28 @@ public class KafkaManager {
 	
 	// create the producer
 	this.producer = new KafkaProducer<>(props);
+
+	return true;
+    }
+
+    private boolean createConsumer(String serverAddress, String clientId) {
+	Properties props = new Properties();
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, serverAddress);
+	props.put(ProducerConfig.CLIENT_ID_CONFIG, clientId.replaceAll("\\s", ""));
+	props.put("group.id", clientId.replaceAll("\\s", ""));
+	props.put("enable.auto.commit", "true");
+	try {
+	    props.put("key.deserializer",
+		      Class.forName("org.apache.kafka.common.serialization.StringDeserializer"));
+	    props.put("value.deserializer",
+		      Class.forName("org.apache.kafka.common.serialization.StringDeserializer"));
+	} catch(Exception e) {
+	    return false;
+	}
 	
+	this.consumer = new KafkaConsumer<>(props);
+	this.consumer.subscribe(List.of("events"));
+
 	return true;
     }
 
@@ -86,5 +118,23 @@ public class KafkaManager {
 	}
 
 	return this.sendMessage(json);
+    }
+
+    public List<Map<String,String>> getMessages() {
+        ConsumerRecords<String, String> records = this.consumer.poll(Duration.ofSeconds(5));
+
+	List<Map<String,String>> r = new LinkedList();
+
+	for (ConsumerRecord<String, String> record : records) {
+	    ObjectMapper mapper = new ObjectMapper();
+	    try {
+		Map<String, String> m = mapper.readValue(record.value(), Map.class);
+		r.add(m);
+	    } catch (IOException e) {
+		System.out.print("Could not decode message: " + record.value());
+	    }
+	}
+	
+	return r;
     }
 }
