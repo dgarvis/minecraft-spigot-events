@@ -24,7 +24,13 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-	//event.getPlayer().getName()
+	Map<String, String> e = new HashMap<String, String>();
+	e.put("eventType", "PLAYER_JOINED_SERVER");
+	e.put("playerName", event.getPlayer().getName());
+	e.put("playerUUID", event.getPlayer().getUniqueId().toString());
+	e.put("server", serverName);
+
+	kafka.sendMessage(e);
     }
 
     @EventHandler
