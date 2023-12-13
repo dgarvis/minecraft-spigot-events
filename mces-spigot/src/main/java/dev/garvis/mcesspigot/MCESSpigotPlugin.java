@@ -45,7 +45,8 @@ public class MCESSpigotPlugin extends JavaPlugin {
 
 	Bukkit.getScheduler().runTask(this, () -> {
 		for (Map<String, String> message : messages) {
-		    if(message.get("server").equals(this.serverName)) continue;
+		    if(message.containsKey("server") && message.get("server").equals(this.serverName)) continue;
+		    
 		    System.out.println("Got Message: " + message.toString());
 
 		    // https://www.spigotmc.org/threads/the-best-way-to-send-a-message-to-all-the-players.461507/
@@ -54,6 +55,10 @@ public class MCESSpigotPlugin extends JavaPlugin {
 		    case "PLAYER_JOINED_SERVER":
 			Bukkit.broadcastMessage(ChatColor.YELLOW + message.get("playerName") +
 						" joined server " + message.get("server"));
+			break;
+		    case "PLAYER_DISCONNECTED":
+			Bukkit.broadcastMessage(ChatColor.YELLOW + message.get("playerName") +
+						" disconnected from the network.");
 			break;
 		    case "CHAT_MESSAGE_PUBLISHED":
 			Bukkit.broadcastMessage("<" + message.get("playerName") + "> " +
