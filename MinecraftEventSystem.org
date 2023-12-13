@@ -29,7 +29,7 @@ In this inital implementation, there are two types of messages:
   }
   #+end_src
 - PlayerJoinedServer :: Message is published when a player connects to a specific server.
-  #+begin_src
+  #+begin_src json
   {
     "eventType": "PLAYER_JOINED_SERVER",
     "server": "string",
@@ -38,7 +38,7 @@ In this inital implementation, there are two types of messages:
   }
   #+end_src
 - PlayerDisconnected :: Message is published when a player disconnects from a bungeecord network.
-  #+begin_src
+  #+begin_src json
   {
     "eventType": "PLAYER_DISCONNECTED",
     "playerUUID": "string",
