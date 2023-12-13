@@ -54,3 +54,8 @@ From within the game, an op level user may use the following commands:
 - /mcevents connect <server name> <kafka url> :: Which will establish the name of the server
   and connect to the kafka system to publish and listen for messages.
 - /mcevents disconnect :: which will clear the config.
+* Note
+While building this series of plugins, it looks like a chat and player announce across all
+servers in the network might be doable with only a bungeecord plugin. Based on a very quick
+glance at the docs, it can see chat messages and can send messages to other servers the
+sending player is not on. It could also do the same with connect and disconnect status.
