@@ -79,10 +79,14 @@ public class KafkaManager {
     }
 
     public boolean disconnect() {
-	if (this.producer == null) return true;
-
-	 this.producer.close();
-	 this.producer = null;
+	if (this.producer != null) {
+	    this.producer.close();
+	    this.producer = null;
+	}
+	if (this.consumer != null) {
+	    this.consumer.close();
+	    this.consumer = null;
+	}
 
 	 return true;
     }
