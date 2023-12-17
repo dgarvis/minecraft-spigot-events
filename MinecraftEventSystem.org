@@ -62,6 +62,20 @@ In this inital implementation, there are two types of messages:
     "toZ": double
   }
   #+end_src
+- PlayerDeath :: Message is published when a player dies
+  #+begin_src json
+  {
+    "eventType": "PLAYER_DIED",
+    "playerUUID": "string",
+    "playerName": "string",
+    "server": "string",
+    "world": "string",
+    "x": double,
+    "y": double,
+    "z": double,
+    "message": "string
+  }
+  #+end_src
 - BlockBroken :: Message is published when a player breaks a block
   #+begin_src json
   {

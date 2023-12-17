@@ -9,6 +9,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -67,6 +68,24 @@ public class PlayerListener implements Listener {
 	e.put("toX", event.getTo().getX());
 	e.put("toY", event.getTo().getY());
 	e.put("toZ", event.getTo().getZ());
+
+	kafka.sendMessage(e);
+    }
+
+    @EventHandler
+    public void onPlayerDied(PlayerDeathEvent event) {
+	Map<String, Object> e = new HashMap<String, Object>();
+	e.put("eventType", "PLAYER_DIED");
+	e.put("playerName", event.getEntity().getName());
+	e.put("playerUUID", event.getEntity().getUniqueId().toString());
+	e.put("server", serverName);
+
+	e.put("message", event.getDeathMessage());
+	
+	e.put("world", event.getEntity().getLocation().getWorld().getName());
+	e.put("x", event.getEntity().getLocation().getX());
+	e.put("y", event.getEntity().getLocation().getY());
+	e.put("z", event.getEntity().getLocation().getZ());
 
 	kafka.sendMessage(e);
     }
