@@ -2,6 +2,7 @@ package dev.garvis.mcesspigot;
 
 import dev.garvis.mcesspigot.KafkaManager;
 import dev.garvis.mcesspigot.PlayerListener;
+import dev.garvis.mcesspigot.BlockListener;
 
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -10,6 +11,7 @@ import org.bukkit.ChatColor;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Arrays;
 
 public class MCESSpigotPlugin extends JavaPlugin {
     
@@ -33,6 +35,7 @@ public class MCESSpigotPlugin extends JavaPlugin {
 	//kafka.sendMessage("Hello");
 
 	getServer().getPluginManager().registerEvents(new PlayerListener(serverName, kafka), this);
+	getServer().getPluginManager().registerEvents(new BlockListener(serverName, kafka), this);
 
 	// https://www.spigotmc.org/threads/guide-threading-for-beginners.523773/
 	Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
@@ -41,28 +44,33 @@ public class MCESSpigotPlugin extends JavaPlugin {
     }
 
     private void processMessages() {
-	List<Map<String,String>> messages = kafka.getMessages();
+	String[] events = {
+	    "PLAYER_JOINED_SERVER",
+	    "PLAYER_DISCONNECTED",
+	    "CHAT_MESSAGE_PUBLISHED"
+	};
+	List<Map<String,Object>> messages = kafka.getMessages(this.serverName, Arrays.asList(events));
 
 	Bukkit.getScheduler().runTask(this, () -> {
-		for (Map<String, String> message : messages) {
-		    if(message.containsKey("server") && message.get("server").equals(this.serverName)) continue;
+		for (Map<String, Object> message : messages) {
+		    //if(message.containsKey("server") && message.get("server").equals(this.serverName)) continue;
 		    
 		    System.out.println("Got Message: " + message.toString());
 
 		    // https://www.spigotmc.org/threads/the-best-way-to-send-a-message-to-all-the-players.461507/
 		    
-		    switch (message.get("eventType")) {
+		    switch ((String)message.get("eventType")) {
 		    case "PLAYER_JOINED_SERVER":
-			Bukkit.broadcastMessage(ChatColor.YELLOW + message.get("playerName") +
-						" joined server " + message.get("server"));
+			Bukkit.broadcastMessage(ChatColor.YELLOW + (String)message.get("playerName") +
+						" joined server " + (String)message.get("server"));
 			break;
 		    case "PLAYER_DISCONNECTED":
-			Bukkit.broadcastMessage(ChatColor.YELLOW + message.get("playerName") +
+			Bukkit.broadcastMessage(ChatColor.YELLOW + (String)message.get("playerName") +
 						" disconnected from the network.");
 			break;
 		    case "CHAT_MESSAGE_PUBLISHED":
-			Bukkit.broadcastMessage("<" + message.get("playerName") + "> " +
-						message.get("message"));
+			Bukkit.broadcastMessage("<" + (String)message.get("playerName") + "> " +
+						(String)message.get("message"));
 			break;
 		    }
 		}

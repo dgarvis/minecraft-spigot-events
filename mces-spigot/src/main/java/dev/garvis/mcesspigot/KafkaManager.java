@@ -7,6 +7,7 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 
 import java.util.Properties;
+import java.util.Date;
 
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -107,9 +108,11 @@ public class KafkaManager {
 	return true;
     }
 
-    public boolean sendMessage(Map<String, String> m) {
+    public boolean sendMessage(Map<String, Object> m) {
 	ObjectMapper mapper = new ObjectMapper();
 	String json;
+
+	m.put("stamp", new Date().getTime() / 1000L);
 	
 	try {
 	    json = mapper.writeValueAsString(m);
@@ -124,19 +127,39 @@ public class KafkaManager {
 	return this.sendMessage(json);
     }
 
-    public List<Map<String,String>> getMessages() {
-        ConsumerRecords<String, String> records = this.consumer.poll(Duration.ofSeconds(5));
+    /**
+     * Will return when their are messages or the time out has occured.
+     * 
+     * @param serverName this is the name of the current server, so these messages will
+     *                   be ignored.
+     * @param events this is a list of events to listen for.
+     * @return A list of events, each event in in a map form.
+     */
+    public List<Map<String,Object>> getMessages(String serverName, List<String> events) {
 
-	List<Map<String,String>> r = new LinkedList();
+	// Prepare the return
+	List<Map<String,Object>> r = new LinkedList();
 
-	for (ConsumerRecord<String, String> record : records) {
-	    ObjectMapper mapper = new ObjectMapper();
-	    try {
-		Map<String, String> m = mapper.readValue(record.value(), Map.class);
-		r.add(m);
-	    } catch (IOException e) {
-		System.out.print("Could not decode message: " + record.value());
-	    }
+	for (int attempt = 0; r.isEmpty() && attempt < 5; attempt++) {
+	    // Atempt to get messages
+	    ConsumerRecords<String, String> records = this.consumer.poll(Duration.ofSeconds(5));
+	
+	    // Parse Messages
+	    for (ConsumerRecord<String, String> record : records) {
+		ObjectMapper mapper = new ObjectMapper();
+		try {
+		    Map<String, Object> m = mapper.readValue(record.value(), Map.class);
+		    
+		    // Skip message if we don't care about it.
+		    if (!m.containsKey("eventType")) continue;
+		    if (m.containsKey("server") && ((String)m.get("server")).equals(serverName)) continue;
+		    if (!events.contains((String)m.get("eventType"))) continue;
+			
+			r.add(m);
+			} catch (IOException e) {
+			    System.out.print("Could not decode message: " + record.value());
+			}
+		}
 	}
 	
 	return r;

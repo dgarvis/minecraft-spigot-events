@@ -7,6 +7,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 
 import java.util.Map;
@@ -24,7 +25,7 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-	Map<String, String> e = new HashMap<String, String>();
+	Map<String, Object> e = new HashMap<String, Object>();
 	e.put("eventType", "PLAYER_JOINED_SERVER");
 	e.put("playerName", event.getPlayer().getName());
 	e.put("playerUUID", event.getPlayer().getUniqueId().toString());
@@ -39,12 +40,33 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onPlayerChat(AsyncPlayerChatEvent event) {
-	Map<String, String> e = new HashMap<String, String>();
+	Map<String, Object> e = new HashMap<String, Object>();
 	e.put("eventType", "CHAT_MESSAGE_PUBLISHED");
 	e.put("playerName", event.getPlayer().getName());
 	e.put("playerUUID", event.getPlayer().getUniqueId().toString());
 	e.put("server", serverName);
 	e.put("message", event.getMessage());
+
+	kafka.sendMessage(e);
+    }
+
+    @EventHandler
+    public void onPlayerMove(PlayerMoveEvent event) {
+	Map<String, Object> e = new HashMap<String, Object>();
+	e.put("eventType", "PLAYER_MOVED");
+	e.put("playerName", event.getPlayer().getName());
+	e.put("playerUUID", event.getPlayer().getUniqueId().toString());
+	e.put("server", serverName);
+
+	e.put("fromWorld", event.getFrom().getWorld().getName());
+	e.put("fromX", event.getFrom().getX());
+	e.put("fromY", event.getFrom().getY());
+	e.put("fromZ", event.getFrom().getZ());
+
+	e.put("toWorld", event.getTo().getWorld().getName());
+	e.put("toX", event.getTo().getX());
+	e.put("toY", event.getTo().getY());
+	e.put("toZ", event.getTo().getZ());
 
 	kafka.sendMessage(e);
     }

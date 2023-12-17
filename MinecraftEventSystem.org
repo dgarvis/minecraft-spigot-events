@@ -45,6 +45,36 @@ In this inital implementation, there are two types of messages:
     "playerName": "string"
   }
   #+end_src
+- PlayerMoved :: Message is published when a player moves
+  #+begin_src json
+  {
+    "eventType": "PLAYER_MOVED",
+    "playerUUID": "string",
+    "playerName": "string",
+    "server": "string",
+    "fromWorld": "string",
+    "fromX": double,
+    "fromY": double,
+    "fromZ": double,
+    "toWord": "string",
+    "toX": double,
+    "toY": double,
+    "toZ": double
+  }
+  #+end_src
+- BlockBroken :: Message is published when a player breaks a block
+  #+begin_src json
+  {
+    "eventType": "BLOCK_BROKEN",
+    "playerUUID": "string",
+    "playerName": "string",
+    "server": "string",
+    "blockType": "string",
+    "x": double,
+    "y": double,
+    "z": double
+  }
+  #+end_src
 
 ** Plugin Commands
 Interaction with the plugin should be simple, where the jar file itself is just placed within the plugin directory
