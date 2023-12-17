@@ -64,6 +64,7 @@ public class KafkaManager {
 	props.put(ProducerConfig.CLIENT_ID_CONFIG, clientId.replaceAll("\\s", ""));
 	props.put("group.id", clientId.replaceAll("\\s", ""));
 	props.put("enable.auto.commit", "true");
+	props.put("max.poll.records", 50);
 	try {
 	    props.put("key.deserializer",
 		      Class.forName("org.apache.kafka.common.serialization.StringDeserializer"));
