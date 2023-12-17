@@ -103,6 +103,68 @@ In this inital implementation, there are two types of messages:
     "placedAgainst": "string"
   }
   #+end_src
+- PlayerDamaged :: Message is published when a player takes damage.
+  #+begin_src json
+  {
+    "eventType": "PLAYER_DAMAGED",
+    "server": "string",  
+    
+    "playerUUID": "string",
+    "playerName": "string",
+
+    "x": double,
+    "y": double,
+    "z": double,
+
+    "amount": double,
+    "cause": "string",
+    "damageFrom": "string"    
+  }
+  #+end_src
+- PlayerDoesDamaged :: Message is published when a player does damage.
+  #+begin_src json
+  {
+    "eventType": "PLAYER_DOES_DAMAGE",
+    "server": "string",  
+    
+    "playerUUID": "string",
+    "playerName": "string",
+
+    "x": double,
+    "y": double,
+    "z": double,
+
+    "amount": double,
+    "cause": "string",
+    "damageTo": "string"    
+  }
+  #+end_src
+- PlayerDamagesPlayer :: Message is published when a player does damage to another player.
+  #+begin_src json
+  {
+    "eventType": "PLAYER_DOES_DAMAGE_TO_PLAYER",
+    "server": "string",  
+    
+    "playerUUID": "string",
+    "playerName": "string",
+
+    "x": double,
+    "y": double,
+    "z": double,
+
+    "attackedPlayerUUID": "string",
+    "attackedPlayerName": "string",
+
+    "attackedPlayerX": double,
+    "attackedPlayerY": double,
+    "attackedPlayerZ": double,
+
+    "amount": double,
+    "cause": "string",
+
+
+  }
+  #+end_src
 
 ** Plugin Commands
 Interaction with the plugin should be simple, where the jar file itself is just placed within the plugin directory

@@ -10,6 +10,8 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.entity.Player;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -89,4 +91,87 @@ public class PlayerListener implements Listener {
 
 	kafka.sendMessage(e);
     }
+
+    @EventHandler
+    public void onPlayerDamaged(EntityDamageByEntityEvent event) {
+	if (! (event.getEntity() instanceof Player)) return;
+	if (event.getDamager() instanceof Player) return; // if player damaged player, another event handles.
+
+	Player p = (Player) event.getEntity();
+	
+	Map<String, Object> e = new HashMap<String, Object>();
+	e.put("eventType", "PLAYER_DAMAGED");
+	e.put("server", serverName);
+	
+	e.put("playerName", p.getName());
+	e.put("playerUUID", p.getUniqueId().toString());
+	
+	e.put("x", p.getLocation().getX());
+	e.put("y", p.getLocation().getY());
+	e.put("z", p.getLocation().getZ());
+
+	e.put("amount", event.getFinalDamage());
+	e.put("cause", event.getCause().toString());
+	e.put("damageFrom", event.getDamager().getType().toString());
+	
+	kafka.sendMessage(e);
+    }
+
+    @EventHandler
+    public void onPlayerDoesDamaged(EntityDamageByEntityEvent event) {
+	if (event.getEntity() instanceof Player) return; // if player is damaged by player, another event handles
+	if (! (event.getDamager() instanceof Player)) return;
+
+	Player p = (Player) event.getDamager();
+	
+	Map<String, Object> e = new HashMap<String, Object>();
+	e.put("eventType", "PLAYER_DOES_DAMAGED");
+	e.put("server", serverName);
+	
+	e.put("playerName", p.getName());
+	e.put("playerUUID", p.getUniqueId().toString());
+	
+	e.put("x", p.getLocation().getX());
+	e.put("y", p.getLocation().getY());
+	e.put("z", p.getLocation().getZ());
+
+	e.put("amount", event.getFinalDamage());
+	e.put("cause", event.getCause().toString());
+	e.put("damageTo", event.getEntityType().toString());
+	
+	kafka.sendMessage(e);	
+    }
+
+    @EventHandler
+    public void onPlayerDamagesPlayer(EntityDamageByEntityEvent event) {
+	if (! (event.getEntity() instanceof Player)) return;
+	if (! (event.getDamager() instanceof Player)) return;
+
+	Player p = (Player) event.getDamager();
+	Player attacked = (Player) event.getEntity();
+	
+	Map<String, Object> e = new HashMap<String, Object>();
+	e.put("eventType", "PLAYER_DOES_DAMAGED_TO_PLAYER");
+	e.put("server", serverName);
+	
+	e.put("playerName", p.getName());
+	e.put("playerUUID", p.getUniqueId().toString());
+	
+	e.put("x", p.getLocation().getX());
+	e.put("y", p.getLocation().getY());
+	e.put("z", p.getLocation().getZ());
+
+	e.put("attackedPlayerName", attacked.getName());
+	e.put("attackedPlayerUUID", attacked.getUniqueId().toString());
+	
+	e.put("attackedPlayerX", attacked.getLocation().getX());
+	e.put("attackedPlayerY", attacked.getLocation().getY());
+	e.put("attackedPlayerZ", attacked.getLocation().getZ());
+	
+	e.put("amount", event.getFinalDamage());
+	e.put("cause", event.getCause().toString());
+	
+	kafka.sendMessage(e);	
+    }
+    
 }
