@@ -103,7 +103,7 @@ public class KafkaManager {
 	// send data - asynchronous
         this.producer.send(producerRecord);
 
-	System.out.println("Message Sent: " + message);
+	//System.out.println("Message Sent: " + message);
 	
 	return true;
     }

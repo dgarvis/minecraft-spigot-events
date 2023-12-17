@@ -75,6 +75,20 @@ In this inital implementation, there are two types of messages:
     "z": double
   }
   #+end_src
+- BlockPlaced :: Message is published when a player places a block
+  #+begin_src json
+  {
+    "eventType": "BLOCK_PLACED",
+    "playerUUID": "string",
+    "playerName": "string",
+    "server": "string",
+    "blockType": "string",
+    "x": double,
+    "y": double,
+    "z": double,
+    "placedAgainst": "string"
+  }
+  #+end_src
 
 ** Plugin Commands
 Interaction with the plugin should be simple, where the jar file itself is just placed within the plugin directory
