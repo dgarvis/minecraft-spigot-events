@@ -55,6 +55,12 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
+	// you might be able to actually use the block value istead of the x,y,z
+	if ( Math.floor(event.getFrom().getX()) == Math.floor(event.getTo().getX()) &&
+	     Math.floor(event.getFrom().getY()) == Math.floor(event.getTo().getY()) &&
+	     Math.floor(event.getFrom().getZ()) == Math.floor(event.getTo().getZ()) )
+	    return;
+	
 	Map<String, Object> e = new HashMap<String, Object>();
 	e.put("eventType", "PLAYER_MOVED");
 	e.put("playerName", event.getPlayer().getName());
@@ -151,7 +157,7 @@ public class PlayerListener implements Listener {
 	Player attacked = (Player) event.getEntity();
 	
 	Map<String, Object> e = new HashMap<String, Object>();
-	e.put("eventType", "PLAYER_DOES_DAMAGED_TO_PLAYER");
+	e.put("eventType", "PLAYER_DOES_DAMAGE_TO_PLAYER");
 	e.put("server", serverName);
 	
 	e.put("playerName", p.getName());
