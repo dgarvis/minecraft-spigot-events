@@ -47,7 +47,9 @@ public class MCESSpigotPlugin extends JavaPlugin {
 	String[] events = {
 	    "PLAYER_JOINED_SERVER",
 	    "PLAYER_DISCONNECTED",
-	    "CHAT_MESSAGE_PUBLISHED"
+	    "CHAT_MESSAGE_PUBLISHED",
+	    "DISCORD_VOICE_JOINED",
+	    "DISCORD_VOICE_LEFT"
 	};
 	List<Map<String,Object>> messages = kafka.getMessages(this.serverName, Arrays.asList(events));
 
@@ -71,6 +73,14 @@ public class MCESSpigotPlugin extends JavaPlugin {
 		    case "CHAT_MESSAGE_PUBLISHED":
 			Bukkit.broadcastMessage("<" + (String)message.get("playerName") + "> " +
 						(String)message.get("message"));
+			break;
+		    case "DISCORD_VOICE_JOINED":
+			Bukkit.broadcastMessage(ChatColor.WHITE + "["+(String)message.get("username")+"] " +
+						ChatColor.LIGHT_PURPLE + "Joined the Discord Voice Chat.");
+			break;
+		    case "DISCORD_VOICE_LEFT":
+			Bukkit.broadcastMessage(ChatColor.WHITE + "["+(String)message.get("username")+"] " +
+						ChatColor.LIGHT_PURPLE + "Left the Discord Voice Chat.");
 			break;
 		    }
 		}

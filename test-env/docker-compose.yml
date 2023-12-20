@@ -14,6 +14,9 @@ services:
     restart: always
   world1:
     image: itzg/minecraft-server
+    ports:
+      # Rcon
+      - "25575:25575"
     restart: always
     volumes:
       - "./config-files/world1-bukkit.yml:/data/bukkit.yml"
@@ -28,6 +31,8 @@ services:
       OPS: "WindMagi"
       ONLINE_MODE: "FALSE"
       LEVEL: world
+      ENABLE_RCON: "TRUE"
+      RCON_PASSWORD: "Meepers"
   world2:
     image: itzg/minecraft-server
     restart: always
