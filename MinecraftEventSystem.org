@@ -165,6 +165,9 @@ In this inital implementation, there are two types of messages:
 
   }
   #+end_src
+- TODO ItemCrafted
+- TODO ChestOpened
+- TODO PlayerLeftServer
 
 ** Plugin Commands
 Interaction with the plugin should be simple, where the jar file itself is just placed within the plugin directory
