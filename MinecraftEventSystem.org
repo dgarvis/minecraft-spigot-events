@@ -16,9 +16,9 @@ The system is made up of two parts
   to react to them.
 - BungeeCord Plugin :: This is a java plugin that publishes events into the message for bungeecord.
 
-** Types of Messages
-In this inital implementation, there are two types of messages:
-- ChatMessagePublished :: Message is published when a player sends a message.
+** Events
+*** DONE ChatMessagePublished
+Message is published when a player sends a message.
   #+begin_src json 
   {
     "eventType": "CHAT_MESSAGE_PUBLISHED",
@@ -28,7 +28,8 @@ In this inital implementation, there are two types of messages:
     "message": "string"
   }
   #+end_src
-- PlayerJoinedServer :: Message is published when a player connects to a specific server.
+*** DONE PlayerJoinedServer
+Message is published when a player connects to a specific server.
   #+begin_src json
   {
     "eventType": "PLAYER_JOINED_SERVER",
@@ -37,7 +38,8 @@ In this inital implementation, there are two types of messages:
     "playerName": "string"
   }
   #+end_src
-- PlayerDisconnected :: Message is published when a player disconnects from a bungeecord network.
+*** DONE PlayerDisconnected
+Message is published when a player disconnects from a bungeecord network.
   #+begin_src json
   {
     "eventType": "PLAYER_DISCONNECTED",
@@ -45,7 +47,8 @@ In this inital implementation, there are two types of messages:
     "playerName": "string"
   }
   #+end_src
-- PlayerMoved :: Message is published when a player moves
+*** DONE PlayerMoved
+Message is published when a player moves
   #+begin_src json
   {
     "eventType": "PLAYER_MOVED",
@@ -62,7 +65,8 @@ In this inital implementation, there are two types of messages:
     "toZ": double
   }
   #+end_src
-- PlayerDeath :: Message is published when a player dies
+*** DONE PlayerDeath
+Message is published when a player dies
   #+begin_src json
   {
     "eventType": "PLAYER_DIED",
@@ -76,7 +80,8 @@ In this inital implementation, there are two types of messages:
     "message": "string
   }
   #+end_src
-- BlockBroken :: Message is published when a player breaks a block
+*** DONE BlockBroken
+Message is published when a player breaks a block
   #+begin_src json
   {
     "eventType": "BLOCK_BROKEN",
@@ -89,7 +94,8 @@ In this inital implementation, there are two types of messages:
     "z": double
   }
   #+end_src
-- BlockPlaced :: Message is published when a player places a block
+*** DONE BlockPlaced
+Message is published when a player places a block
   #+begin_src json
   {
     "eventType": "BLOCK_PLACED",
@@ -103,7 +109,8 @@ In this inital implementation, there are two types of messages:
     "placedAgainst": "string"
   }
   #+end_src
-- PlayerDamaged :: Message is published when a player takes damage.
+*** DONE PlayerDamaged
+Message is published when a player takes damage.
   #+begin_src json
   {
     "eventType": "PLAYER_DAMAGED",
@@ -121,7 +128,8 @@ In this inital implementation, there are two types of messages:
     "damageFrom": "string"    
   }
   #+end_src
-- PlayerDoesDamaged :: Message is published when a player does damage.
+*** DONE PlayerDoesDamaged
+Message is published when a player does damage.
   #+begin_src json
   {
     "eventType": "PLAYER_DOES_DAMAGE",
@@ -139,7 +147,8 @@ In this inital implementation, there are two types of messages:
     "damageTo": "string"    
   }
   #+end_src
-- PlayerDamagesPlayer :: Message is published when a player does damage to another player.
+*** DONE PlayerDamagesPlayer
+Message is published when a player does damage to another player.
   #+begin_src json
   {
     "eventType": "PLAYER_DOES_DAMAGE_TO_PLAYER",
@@ -165,9 +174,12 @@ In this inital implementation, there are two types of messages:
 
   }
   #+end_src
-- TODO ItemCrafted
-- TODO ChestOpened
-- TODO PlayerLeftServer
+*** TODO PlayerLeftServer
+*** TODO ItemCrafted
+*** TODO ChestOpened
+*** TODO PlayerSlept
+*** TODO ItemEnchanted
+*** TODO TradedWithVillager
 
 ** Plugin Commands
 Interaction with the plugin should be simple, where the jar file itself is just placed within the plugin directory
