@@ -38,6 +38,16 @@ Message is published when a player connects to a specific server.
     "playerName": "string"
   }
   #+end_src
+*** TODO PlayerLeftServer
+*** DONE PlayerConnected
+Message is published when a player connects to a bungeecord network.
+#+begin_src json
+{
+  "eventType": "PLAYER_CONNECTED",
+  "playerUUID": "string",
+  "playerName": "string"
+}
+#+end_src
 *** DONE PlayerDisconnected
 Message is published when a player disconnects from a bungeecord network.
   #+begin_src json
@@ -174,7 +184,6 @@ Message is published when a player does damage to another player.
 
   }
   #+end_src
-*** TODO PlayerLeftServer
 *** TODO ItemCrafted
 *** TODO ChestOpened
 *** TODO PlayerSlept
