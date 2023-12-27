@@ -39,6 +39,13 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
+	Map<String, Object> e = new HashMap<String, Object>();
+	e.put("eventType", "PLAYER_LEFT_SERVER");
+	e.put("playerName", event.getPlayer().getName());
+	e.put("playerUUID", event.getPlayer().getUniqueId().toString());
+	e.put("server", serverName);
+
+	kafka.sendMessage(e);
     }
 
     @EventHandler

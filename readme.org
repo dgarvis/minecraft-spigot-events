@@ -38,7 +38,16 @@ Message is published when a player connects to a specific server.
     "playerName": "string"
   }
   #+end_src
-*** TODO PlayerLeftServer
+*** DONE PlayerLeftServer
+Message is published when a player leaves a specific server.
+#+begin_src json
+{
+  "eventType": "PLAYER_LEFT_SERVER",
+  "server": "string",
+  "playerUUID": "string",
+  "playerName": "string"
+}
+#+end_src
 *** DONE PlayerConnected
 Message is published when a player connects to a bungeecord network.
 #+begin_src json
