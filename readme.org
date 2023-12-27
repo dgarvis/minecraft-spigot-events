@@ -206,7 +206,41 @@ Message is publish when a player crafts an item.
 }
 #+end_src
 *** TODO ChestOpened
-*** TODO PlayerSlept
+*** DONE PlayerEntersBed
+Message is published when a player enters the bed.
+#+begin_src json
+{
+  "eventType": "PLAYER_ENTERED_BED",
+  "playerUUID": "string",
+  "playerName": "string",
+  "server": "string",
+
+  "bedType": "string",
+
+  "world": "string",
+  "x": double,
+  "y": double,
+  "z": double
+}
+#+end_src
+*** DONE PlayerLeavesBed
+Message is published when a player leaves the bed.
+#+begin_src json
+{
+  "eventType": "PLAYER_LEFT_BED",
+  "playerUUID": "string",
+  "playerName": "string",
+  "server": "string",
+
+  "bedType": "string",
+
+  "world": "string",
+  "x": double,
+  "y": double,
+  "z": double
+}
+#+end_src
+*** TODO PlayerPotionEffect
 *** TODO ItemEnchanted
 *** TODO TradedWithVillager
 

@@ -10,6 +10,8 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerBedEnterEvent;
+import org.bukkit.event.player.PlayerBedLeaveEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.entity.Player;
 
@@ -101,6 +103,42 @@ public class PlayerListener implements Listener {
 	e.put("x", event.getEntity().getLocation().getX());
 	e.put("y", event.getEntity().getLocation().getY());
 	e.put("z", event.getEntity().getLocation().getZ());
+
+	kafka.sendMessage(e);
+    }
+
+    @EventHandler
+    public void onPlayerEnterBed(PlayerBedEnterEvent event) {
+	Map<String, Object> e = new HashMap<String, Object>();
+	e.put("eventType", "PLAYER_ENTERED_BED");
+	e.put("playerName", event.getPlayer().getName());
+	e.put("playerUUID", event.getPlayer().getUniqueId().toString());
+	e.put("server", serverName);
+
+	e.put("bedType", event.getBed().getType().toString());
+	
+	e.put("world", event.getBed().getLocation().getWorld().getName());
+	e.put("x", event.getBed().getLocation().getX());
+	e.put("y", event.getBed().getLocation().getY());
+	e.put("z", event.getBed().getLocation().getZ());
+
+	kafka.sendMessage(e);
+    }
+
+    @EventHandler
+    public void onPlayerLeaveBed(PlayerBedLeaveEvent event) {
+	Map<String, Object> e = new HashMap<String, Object>();
+	e.put("eventType", "PLAYER_LEFT_BED");
+	e.put("playerName", event.getPlayer().getName());
+	e.put("playerUUID", event.getPlayer().getUniqueId().toString());
+	e.put("server", serverName);
+
+	e.put("bedType", event.getBed().getType().toString());
+
+	e.put("world", event.getBed().getLocation().getWorld().getName());
+	e.put("x", event.getBed().getLocation().getX());
+	e.put("y", event.getBed().getLocation().getY());
+	e.put("z", event.getBed().getLocation().getZ());
 
 	kafka.sendMessage(e);
     }
