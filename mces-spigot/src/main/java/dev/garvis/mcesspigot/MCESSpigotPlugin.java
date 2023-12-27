@@ -3,6 +3,7 @@ package dev.garvis.mcesspigot;
 import dev.garvis.mcesspigot.KafkaManager;
 import dev.garvis.mcesspigot.PlayerListener;
 import dev.garvis.mcesspigot.BlockListener;
+import dev.garvis.mcesspigot.InventoryListener;
 
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -36,6 +37,7 @@ public class MCESSpigotPlugin extends JavaPlugin {
 
 	getServer().getPluginManager().registerEvents(new PlayerListener(serverName, kafka), this);
 	getServer().getPluginManager().registerEvents(new BlockListener(serverName, kafka), this);
+	getServer().getPluginManager().registerEvents(new InventoryListener(serverName, kafka), this);
 
 	// https://www.spigotmc.org/threads/guide-threading-for-beginners.523773/
 	Bukkit.getScheduler().runTaskAsynchronously(this, () -> {

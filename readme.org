@@ -193,7 +193,18 @@ Message is published when a player does damage to another player.
 
   }
   #+end_src
-*** TODO ItemCrafted
+*** DONE ItemCrafted
+Message is publish when a player crafts an item.
+#+begin_src json
+{
+  "eventType": "ITEM_CRAFTED",
+  "playerUUID": "string",
+  "playerName": "string",
+  "server": "string",
+  "blockType": "string",
+  "amount": double
+}
+#+end_src
 *** TODO ChestOpened
 *** TODO PlayerSlept
 *** TODO ItemEnchanted
