@@ -3,6 +3,7 @@ package dev.garvis.mcesspigot;
 import dev.garvis.mcesspigot.KafkaManager;
 
 import org.bukkit.Bukkit;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -13,6 +14,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerBedEnterEvent;
 import org.bukkit.event.player.PlayerBedLeaveEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.entity.Player;
 
 import java.util.Map;
@@ -140,6 +142,32 @@ public class PlayerListener implements Listener {
 	e.put("y", event.getBed().getLocation().getY());
 	e.put("z", event.getBed().getLocation().getZ());
 
+	kafka.sendMessage(e);
+    }
+
+    @EventHandler
+    public void onPlayerPotionEffect(EntityPotionEffectEvent event) {
+	if (! (event.getEntity() instanceof Player)) return;
+	Player p = (Player) event.getEntity();
+
+	Map<String, Object> e = new HashMap<String, Object>();
+	e.put("eventType", "PLAYER_POTION_EFFECT");
+	e.put("playerName", p.getName());
+	e.put("playerUUID", p.getUniqueId().toString());
+	e.put("server", serverName);
+
+	e.put("action", event.getAction().toString());
+	e.put("cause", event.getCause().toString());
+
+	PotionEffect effect = event.getNewEffect();
+	if (effect == null)
+	    effect = event.getOldEffect();
+	
+	//e.put("type", effect.getKey().toString());
+	e.put("type", effect.getType().getKey().toString());
+	e.put("duration", effect.getDuration());
+	e.put("amplifier", effect.getAmplifier());
+	
 	kafka.sendMessage(e);
     }
 

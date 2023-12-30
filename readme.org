@@ -240,7 +240,20 @@ Message is published when a player leaves the bed.
   "z": double
 }
 #+end_src
-*** TODO PlayerPotionEffect
+*** DONE PlayerPotionEffect
+{
+  "eventType": "PLAYER_POTION_EFFECT",
+  "playerUUID": "string",
+  "playerName": "string",
+  "server": "string",
+
+  "action": "ADDED|CHANGED|CLEARED|REMOVED",
+  "cause": "string",
+
+  "type": "string",
+  "duration": int, # In ticks
+  "amplifier": int,
+}
 *** TODO ItemEnchanted
 *** TODO TradedWithVillager
 
