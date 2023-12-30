@@ -18,21 +18,17 @@ public class MCESSpigotPlugin extends JavaPlugin {
     
     private KafkaManager kafka = new KafkaManager();
     private String serverName;
+    private boolean running = true;
     
     @Override
     public void onEnable() {
 	this.saveDefaultConfig();
 
 	FileConfiguration config = getConfig();
-	String kafkaServer = config.getString("kafkaServer");
 	this.serverName = config.getString("serverName");
-	//kafkaServer = "kafka:9092";
+	this.attemptToConnectToKafka();
+	this.processBacklogMessages();
 	
-	if (kafka.connect(kafkaServer, serverName)) // using server name as client id.
-	    getLogger().info("Connected to Kafka");
-	else
-	    getLogger().warning("Not connected to kafka, check plugin config.");
-
 	//kafka.sendMessage("Hello");
 
 	getServer().getPluginManager().registerEvents(new PlayerListener(serverName, kafka), this);
@@ -45,7 +41,45 @@ public class MCESSpigotPlugin extends JavaPlugin {
 	    });
     }
 
+    private void processBacklogMessages() {
+	if (!this.running) return;
+
+	this.kafka.processBacklog();
+	
+	Bukkit.getScheduler().runTaskLaterAsynchronously(this, () -> {
+		processBacklogMessages();
+	    }, 20 * 60); // wait 60 second and try again. 20 ticks / second.
+    }
+
+    private void attemptToConnectToKafka() {
+	if (!this.running) return;
+	
+	FileConfiguration config = getConfig();
+	String kafkaServer = config.getString("kafkaServer");
+	String kafkaTopic = config.getString("kafkaTopic");
+
+	// Check we have a kafka server configured
+	if (kafkaServer.isEmpty()) {
+	    getLogger().warning("Kafka connection not configured.");
+	    // Don't try to auto connect.
+	    return;
+	}
+
+	// Try to connect to kafka
+	try {
+	    kafka.connect(kafkaServer, this.serverName, kafkaTopic); // using server name as client id.
+	    getLogger().info("Connected to Kafka");
+	} catch (Exception e) {
+	    getLogger().warning("Not connected to kafka, check plugin config.");
+	    Bukkit.getScheduler().runTaskLaterAsynchronously(this, () -> {
+		    attemptToConnectToKafka();
+		}, 20 * 60); // wait 60 second and try again. 20 ticks / second.
+	}
+    }
+
     private void processMessages() {
+	if (!this.running) return;
+	
 	String[] events = {
 	    "PLAYER_JOINED_SERVER",
 	    "PLAYER_DISCONNECTED",
@@ -95,7 +129,8 @@ public class MCESSpigotPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+	this.running = false;
 	kafka.disconnect();
-	getLogger().info("MCES Disabled");
+	getLogger().info("Spigot Events Disabled");
     }
 }

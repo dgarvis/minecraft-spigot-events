@@ -5,6 +5,7 @@ import org.apache.kafka.clients.consumer.*;
 //import org.apache.kafka.common.serialization.LongSerializer;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.errors.TimeoutException;
 
 import java.util.Properties;
 import java.util.Date;
@@ -26,14 +27,23 @@ public class KafkaManager {
     private KafkaProducer<String, String> producer;
     private KafkaConsumer<String, String> consumer;
 
+    // Used to old messages created before connecting to the server.
+    private LinkedList<String> messageBacklog = new LinkedList<String>();
+    // Number of messages to hold before dropping the oldest.
+    static final int MAX_BACKLOG_MESSAGES = 100000;
+
+    private String topic = "";
+
     public KafkaManager() {
 	this.producer = null;
     }
     
-    public boolean connect(String serverAddress, String clientId) {
-	if (serverAddress.isEmpty()) {
+    public boolean connect(String serverAddress, String clientId, String topic) {
+	if (serverAddress.isEmpty() || topic.isEmpty()) {
 	    return false;
 	}
+
+	this.topic = topic;
 	
 	return createProducer(serverAddress, clientId) && createConsumer(serverAddress, clientId);
     }
@@ -75,7 +85,7 @@ public class KafkaManager {
 	}
 	
 	this.consumer = new KafkaConsumer<>(props);
-	this.consumer.subscribe(List.of("events"));
+	this.consumer.subscribe(List.of(this.topic));
 
 	return true;
     }
@@ -93,22 +103,72 @@ public class KafkaManager {
 	 return true;
     }
 
+    /** 
+     * Will attempt to send messages from the backlog.
+     */
+    public void processBacklog() {
+	if (this.producer == null) return;
+	if (this.messageBacklog.size() <= 0) return;
+
+	for(String message = this.messageBacklog.removeFirst();
+	    message != null;
+	    message = this.messageBacklog.removeFirst()) {
+	    try {
+		this.producer.send(new ProducerRecord<>(this.topic, message));
+	    } catch (TimeoutException e) {
+		this.messageBacklog.addFirst(message);
+		break; // break out of our loop
+	    }
+	}
+    }
+
+    /**
+     * Will send a message into the kafka topic.
+     * 
+     * @param message The message to send.
+     * @return True if the message was sent to the kafka queue, 
+     *         and false if added to the backlog queue.
+     */
     public boolean sendMessage(String message) {
 
-	if (this.producer == null) return false;
+	if (this.producer == null /*|| this.producer.*/) {
+	    this.messageBacklog.add(message);
+	    System.out.println("Not connected to kafka, added message to backlog: " + message);
+	    if (this.messageBacklog.size() > MAX_BACKLOG_MESSAGES) {
+		String removedMessage = this.messageBacklog.removeFirst();
+		System.out.println("Backlog size exceeded, message removed: " + removedMessage);
+	    }
+	    
+	    return false;
+	}
 	
 	// create a producer record
         ProducerRecord<String, String> producerRecord =
-	    new ProducerRecord<>("events", message);
+	    new ProducerRecord<>(this.topic, message);
 
-	// send data - asynchronous
-        this.producer.send(producerRecord);
+	// TODO - this should probably always added to a local message queue or database
+	//        and then have a different thread that sends the messages from that.
+	//        Though not sure I really need this to be that High Availablitiy.
+	// send data
+	try {
+	    this.producer.send(producerRecord);
+	} catch (TimeoutException e) {
+	    this.messageBacklog.add(message);
+	    System.out.println("Kafka timeout, added message to backlog: " + message);
+	    return false;
+	}
 
 	//System.out.println("Message Sent: " + message);
 	
 	return true;
     }
 
+    /**
+     * Takes a map and converts it into a json string to send as a message.
+     *
+     * @param m The map to send.
+     * @return True if the message was sent, False if added to the backlog.
+     */
     public boolean sendMessage(Map<String, Object> m) {
 	ObjectMapper mapper = new ObjectMapper();
 	String json;
@@ -140,6 +200,12 @@ public class KafkaManager {
 
 	// Prepare the return
 	List<Map<String,Object>> r = new LinkedList();
+
+	// make sure we are connected
+	if (this.consumer == null) {
+	    // TODO - sholud probably add some delay.
+	    return r;
+	}
 
 	for (int attempt = 0; r.isEmpty() && attempt < 5; attempt++) {
 	    // Atempt to get messages
