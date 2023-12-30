@@ -212,6 +212,7 @@ Message is published when a player leaves the bed.
 }
 #+end_src
 ** DONE PlayerPotionEffect
+#+begin_src json
 {
   "eventType": "PLAYER_POTION_EFFECT",
   "playerUUID": "string",
@@ -225,6 +226,7 @@ Message is published when a player leaves the bed.
   "duration": int, # In ticks
   "amplifier": int,
 }
+#+end_src
 ** TODO ItemEnchanted
 ** TODO TradedWithVillager
 
