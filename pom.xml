@@ -7,7 +7,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>dev.garvis.mcesspigot</groupId>
-  <artifactId>mces-spigot</artifactId>
+  <artifactId>minecraft-spigot-events</artifactId>
   <version>1.5-SNAPSHOT</version>
 
   <name>mces-spigot</name>
