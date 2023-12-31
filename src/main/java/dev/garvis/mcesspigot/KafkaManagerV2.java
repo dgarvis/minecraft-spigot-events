@@ -1,9 +1,19 @@
 package dev.garvis.mcesspigot;
 
-//import java.util.Map;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Date;
+import java.util.Properties;
+
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.common.serialization.StringSerializer;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.apache.kafka.common.errors.TimeoutException;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Manages sending and reading messages from a Kafka service.
@@ -26,7 +36,7 @@ public class KafkaManagerV2 {
     interface ConsumerCallback {
 	// https://www.w3docs.com/snippets/java/how-to-pass-a-function-as-a-parameter-in-java.html
 	void apply(LinkedList<Message> messages);
-    }
+    }    
 
     /**
      * Holds messages that need to be sent to the kafka.
@@ -40,7 +50,28 @@ public class KafkaManagerV2 {
      * Max number of messages to keep in the queue before dropping messages
      */
     protected int maxMessageSendQueue;
-    
+
+    /**
+     * The name of this producer / consumer group.
+     */
+    protected String name;
+
+    /**
+     * Topic to send events to.
+     * Only requried if the producer is used.
+     */
+    private String sendTopic;
+
+    /** 
+     * The kafka producer, if configured.
+     */
+    private KafkaProducer<String, String> producer;
+
+    /**
+    * The kafka consumer, if configured.
+    */
+    private KafkaConsumer<String, String> consumer;
+
     /**
      * Establish a base class that can recieve messages.
      */
@@ -114,7 +145,7 @@ public class KafkaManagerV2 {
      * @param sendTopic topic to send the events to.
      * @return True if connected, otherwise false.
      */
-    public boolean connect(String name, String brokers, String sendTopic) {
+    public boolean connect(String name, String brokers, String sendTopic) throws Exception {
 	return this.connect(name, brokers, sendTopic, null, null, null);
     }
 
@@ -130,7 +161,7 @@ public class KafkaManagerV2 {
      */
     public boolean connect(String name, String brokers,
 			   String[] consumeTopics, String[] consumeEvents,
-			   ConsumerCallback consumeCallback) {
+			   ConsumerCallback consumeCallback) throws Exception {
 	return this.connect(name, brokers, null, consumeTopics, consumeEvents, consumeCallback);
     }
 
@@ -148,9 +179,60 @@ public class KafkaManagerV2 {
      */
     public boolean connect(String name, String brokers, String sendTopic,
 			   String[] consumeTopics, String[] consumeEvents,
-			   ConsumerCallback consumeCallback) {
+			   ConsumerCallback consumeCallback) throws Exception {
+
+	if (name.isEmpty())
+	    throw new Exception("A name must be provided.");
+
+	if (brokers.isEmpty())
+	    throw new Exception("Broker(s) must be provided.");
+
+	this.name = name;
+
+	if (!sendTopic.isEmpty()) {
+	    startProducer(brokers, sendTopic);
+	}
+
+	if (consumeTopics.length > 0) {
+	    // TODO - setup consumer
+	}
+	
 	// TODO
 	return false;
+    }
+
+    /**
+     * Will create the producer and start the message sending thread.
+     */
+    private void startProducer(String brokers, String sendTopic) throws Exception {
+	if (this.name == null || this.name.isEmpty())
+	    throw new Exception("Name was not set on the class.");
+	if (brokers == null || brokers.isEmpty())
+	    throw new Exception("Brokers is required");
+	if (sendTopic == null || sendTopic.isEmpty())
+	    throw new Exception("Topic to send to is required.");
+
+	this.sendTopic = sendTopic;
+
+	// Create the producer
+	Properties props = new Properties();
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, brokers);
+	props.put(ProducerConfig.CLIENT_ID_CONFIG, this.name);
+	try {
+	    props.put("key.serializer",
+		      Class.forName("org.apache.kafka.common.serialization.StringSerializer"));
+	    props.put("value.serializer",
+		      Class.forName("org.apache.kafka.common.serialization.StringSerializer"));
+	} catch(Exception e) {
+	    System.err.println("Error when setting serializers: " + e.toString());
+	    throw e; // keep throwing this.
+	}
+	
+	// create the producer
+	this.producer = new KafkaProducer<>(props);
+	
+	// Start the producer thread.
+	startMessageSender();
     }
 
     /**
@@ -170,7 +252,93 @@ public class KafkaManagerV2 {
 
     /**
      * Directly sends a message to the kafka topic.
+     * 
+     * @param msg the raw message to send to the kafka topic.
+     * @return True if sent, otherwise false.
      */
-    protected void sendMessageRaw(String msg) {
+    protected boolean sendMessageRaw(String msg) {
+	try {
+	    this.producer.send(new ProducerRecord<String, String>(this.sendTopic, msg));
+	} catch (TimeoutException e) {
+	    System.err.println("Kafka Timeout");
+	    return false;
+	} catch (Exception e) {
+	    System.err.println("Kafka error when sending message, Error: " + e.toString());
+	    return false;
+	}
+
+	return true;
+    }
+
+    /**
+     * Stop all sub threads and close connections. Object should 
+     * not be used after calling this.
+     */
+    public void close() {
+	this.producer = null;
+	this.consumer = null;
+	
+	// TODO - wait for threads to stop.
+    }
+
+    /**
+     * Starts a sub thread that will take messages from the message send 
+     * queue, add the serverName field, convert them to json, and send them
+     * to the topic. Wil keep running until producer is set to null.
+     */
+    private void startMessageSender() {
+	new Thread(() -> {
+		while (this.producer != null) {		    
+		    final int max_messages = 500;
+		    ObjectMapper mapper = new ObjectMapper();
+		    LinkedList<Message> messages = this.getMessagesToSend(max_messages);
+		    int sentCount = 0;
+		    
+		    for (Message message : messages) {
+			// Add server name
+			message.put("serverName", this.name);
+
+			// Convert to json
+			String json;
+			try {
+			    json = mapper.writeValueAsString(message);
+			} catch (Exception e) {
+			    System.err.println("Could not convert object to json for kakfa stream. Error: " + e.toString());
+			    // we are going to just keep processing messages
+			    // and let this one get marked as done as something
+			    // is probbaly wrong with the object and it is better
+			    // to try and still send the other messages instead of
+			    // getting stuck here in a loop.
+			    sentCount++;
+			    continue;
+			}
+
+			// Send the message
+			if (!this.sendMessageRaw(json)) {
+			    // So the message failed to send... let's stop
+			    // processing this batch as we are probably
+			    // not connected to kafka.
+			    break;
+			}
+			sentCount++;
+		    }
+
+		    // Mark the messages sent as done in our queue.
+		    this.sentSuccess(sentCount);
+
+		    // Sleep for a second if sent count was zero.
+		    if (sentCount <= 0) {
+			try {
+			    Thread.sleep(1000);
+			} catch (Exception e) {
+			    // don't care.
+			}
+			      
+		    }
+		}
+	}).start();
+    }
+
+    private void startMessageConsumer() {
     }
 }
