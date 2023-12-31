@@ -1,6 +1,6 @@
 package dev.garvis.mcesspigot;
 
-import dev.garvis.mcesspigot.KafkaManager;
+import dev.garvis.mcesspigot.KafkaManagerV2;
 import dev.garvis.mcesspigot.PlayerListener;
 import dev.garvis.mcesspigot.BlockListener;
 import dev.garvis.mcesspigot.InventoryListener;
@@ -11,37 +11,37 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.ChatColor;
 
 import java.util.List;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Arrays;
 
 public class MCESSpigotPlugin extends JavaPlugin {
     
-    private KafkaManager kafka = new KafkaManager();
-    private String serverName;
+    private KafkaManagerV2 kafka = new KafkaManagerV2();
+    //private String serverName;
     private boolean running = true;
     
     @Override
     public void onEnable() {
 	this.saveDefaultConfig();
 
-	FileConfiguration config = getConfig();
-	this.serverName = config.getString("serverName");
+	//FileConfiguration config = getConfig();
+	//this.serverName = config.getString("serverName");
 	this.attemptToConnectToKafka();
-	this.processBacklogMessages();
-	
-	//kafka.sendMessage("Hello");
+	//this.processBacklogMessages();
 
-	getServer().getPluginManager().registerEvents(new PlayerListener(serverName, kafka), this);
-	getServer().getPluginManager().registerEvents(new BlockListener(serverName, kafka), this);
-	getServer().getPluginManager().registerEvents(new InventoryListener(serverName, kafka), this);
+	// TODO
+	getServer().getPluginManager().registerEvents(new PlayerListener(kafka), this);
+	getServer().getPluginManager().registerEvents(new BlockListener(kafka), this);
+	getServer().getPluginManager().registerEvents(new InventoryListener(kafka), this);
 
 	// https://www.spigotmc.org/threads/guide-threading-for-beginners.523773/
-	Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
-		processMessages();
-	    });
+	//Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
+	//	processMessages();
+	//    });
     }
 
-    private void processBacklogMessages() {
+    /*private void processBacklogMessages() {
 	if (!this.running) return;
 
 	this.kafka.processBacklog();
@@ -49,25 +49,43 @@ public class MCESSpigotPlugin extends JavaPlugin {
 	Bukkit.getScheduler().runTaskLaterAsynchronously(this, () -> {
 		processBacklogMessages();
 	    }, 20 * 60); // wait 60 second and try again. 20 ticks / second.
-    }
+	    }*/
 
     private void attemptToConnectToKafka() {
 	if (!this.running) return;
-	
+
+	final String[] events = {
+	    "PLAYER_JOINED_SERVER",
+	    "PLAYER_DISCONNECTED",
+	    "CHAT_MESSAGE_PUBLISHED",
+	    "DISCORD_VOICE_JOINED",
+	    "DISCORD_VOICE_LEFT"
+	};
+
+	reloadConfig();
 	FileConfiguration config = getConfig();
 	String kafkaServer = config.getString("kafkaServer");
 	String kafkaTopic = config.getString("kafkaTopic");
+	String serverName = config.getString("serverName");
 
 	// Check we have a kafka server configured
 	if (kafkaServer.isEmpty()) {
 	    getLogger().warning("Kafka connection not configured.");
-	    // Don't try to auto connect.
+	    Bukkit.getScheduler().runTaskLaterAsynchronously(this, () -> {
+		    attemptToConnectToKafka();
+		}, 20 * 60); // wait 60 second and try again. 20 ticks / second.
 	    return;
 	}
 
 	// Try to connect to kafka
 	try {
-	    kafka.connect(kafkaServer, this.serverName, kafkaTopic); // using server name as client id.
+	    kafka.connect(serverName, kafkaServer, kafkaTopic,
+			  new String[]{kafkaTopic}, events,
+			  (LinkedList<KafkaManagerV2.Message> messages) -> {
+			      for (KafkaManagerV2.Message message : messages) {
+				  System.out.println(message);
+			      }
+			  });
 	    getLogger().info("Connected to Kafka");
 	} catch (Exception e) {
 	    getLogger().warning("Not connected to kafka, check plugin config.");
@@ -77,7 +95,7 @@ public class MCESSpigotPlugin extends JavaPlugin {
 	}
     }
 
-    private void processMessages() {
+    /*private void processMessages() {
 	if (!this.running) return;
 	
 	String[] events = {
@@ -125,12 +143,13 @@ public class MCESSpigotPlugin extends JavaPlugin {
 	Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
 		processMessages();
 	    });
-    }
+	    }*/
 
     @Override
     public void onDisable() {
 	this.running = false;
-	kafka.disconnect();
+	//kafka.disconnect();
+	kafka.close();
 	getLogger().info("Spigot Events Disabled");
     }
 }

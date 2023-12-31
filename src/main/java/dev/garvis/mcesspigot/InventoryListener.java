@@ -1,6 +1,6 @@
 package dev.garvis.mcesspigot;
 
-import dev.garvis.mcesspigot.KafkaManager;
+import dev.garvis.mcesspigot.KafkaManagerV2;
 
 import org.bukkit.Bukkit;
 import org.bukkit.inventory.Inventory;
@@ -16,12 +16,10 @@ import java.util.HashMap;
 
 public class InventoryListener implements Listener {
 
-    private KafkaManager kafka;
-    private String serverName;
+    private KafkaManagerV2 kafka;
     
-    public InventoryListener(String serverName, KafkaManager kafka) {
+    public InventoryListener(KafkaManagerV2 kafka) {
 	this.kafka = kafka;
-	this.serverName = serverName;
     }
 
     @EventHandler
@@ -31,12 +29,11 @@ public class InventoryListener implements Listener {
 	}
 	
 	Player player = (Player)event.getWhoClicked();
-	
-	Map<String, Object> e = new HashMap<String, Object>();
+
+	KafkaManagerV2.Message e = this.kafka.new Message();
 	e.put("eventType", "ITEM_CRAFTED");
 	e.put("playerName", player.getName());
 	e.put("playerUUID", player.getUniqueId().toString());
-	e.put("server", serverName);
 
 	e.put("item", event.getRecipe().getResult().getType().toString());
 

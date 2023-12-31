@@ -1,6 +1,6 @@
 package dev.garvis.mcesspigot;
 
-import java.util.HashMap;
+import java.util.Map;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -37,7 +37,16 @@ public class KafkaManagerV2 {
     /**
      * The structure of a message.
      */
-    public class Message extends HashMap<String, Object> {}
+    public class Message extends HashMap<String, Object> {
+
+	public Message() {
+	    super();
+	}
+
+	public Message(Map<String,Object> m) {
+	    super(m);
+	}
+    }
 
     /**
      * Function to be called when a message is ready to be
@@ -53,7 +62,7 @@ public class KafkaManagerV2 {
      * Holds messages that need to be sent to the kafka.
      * When using, wrap in a `synchronized (messageSendQueue) { }`
      *
-     * Note: these messages need to have the `serverName` key set.
+     * Note: these messages need to have the `server` key set.
      */
     protected LinkedList<Message> messageSendQueue;
 
@@ -220,8 +229,8 @@ public class KafkaManagerV2 {
 	    startConsumer(brokers, consumeTopics, consumeEvents, consumeCallback);
 	}
 	
-	// TODO
-	return false;
+	// This return is actually fake
+	return true;
     }
 
     /**
@@ -307,7 +316,7 @@ public class KafkaManagerV2 {
      * Addes a message to the queue to be sent to the kafka stream.
      * This function will add / overwrite any existing `stamp` key 
      * and give it a value of the epoch time this function was called at.
-     * Indirectly, this function will also set the `serverName` key, but
+     * Indirectly, this function will also set the `server` key, but
      * not until right before the message is sent to the server.
      *
      * @param msg The message to send to kafka.
@@ -351,7 +360,7 @@ public class KafkaManagerV2 {
 
     /**
      * Starts a sub thread that will take messages from the message send 
-     * queue, add the serverName field, convert them to json, and send them
+     * queue, add the server field, convert them to json, and send them
      * to the topic. Wil keep running until producer is set to null.
      */
     private void startMessageSender() {
@@ -364,7 +373,7 @@ public class KafkaManagerV2 {
 		    
 		    for (Message message : messages) {
 			// Add server name
-			message.put("serverName", this.name);
+			message.put("server", this.name);
 
 			// Convert to json
 			String json;
@@ -421,7 +430,10 @@ public class KafkaManagerV2 {
 		    // Parse Messages
 		    for (ConsumerRecord<String, String> record : records) {
 			try {
-			    Message message = (Message)mapper.readValue(record.value(), HashMap.class);
+			    Map<String, Object> _message = mapper.readValue(record.value(), Map.class);
+			    Message message = new Message(_message);
+			    //Message message = mapper.readValue(record.value(), Message.class);
+			    
 			    // We can only handle messages with eventTypes
 			    if (!message.containsKey("eventType")) 
 				continue;

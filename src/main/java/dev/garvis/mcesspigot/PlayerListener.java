@@ -1,6 +1,6 @@
 package dev.garvis.mcesspigot;
 
-import dev.garvis.mcesspigot.KafkaManager;
+import dev.garvis.mcesspigot.KafkaManagerV2;
 
 import org.bukkit.Bukkit;
 import org.bukkit.potion.PotionEffect;
@@ -22,43 +22,38 @@ import java.util.HashMap;
 
 public class PlayerListener implements Listener {
 
-    private KafkaManager kafka;
-    private String serverName;
+    private KafkaManagerV2 kafka;
     
-    public PlayerListener(String serverName, KafkaManager kafka) {
+    public PlayerListener(KafkaManagerV2 kafka) {
 	this.kafka = kafka;
-	this.serverName = serverName;
     }
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-	Map<String, Object> e = new HashMap<String, Object>();
+	KafkaManagerV2.Message e = this.kafka.new Message();
 	e.put("eventType", "PLAYER_JOINED_SERVER");
 	e.put("playerName", event.getPlayer().getName());
 	e.put("playerUUID", event.getPlayer().getUniqueId().toString());
-	e.put("server", serverName);
 
 	kafka.sendMessage(e);
     }
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-	Map<String, Object> e = new HashMap<String, Object>();
+	KafkaManagerV2.Message e = this.kafka.new Message();
 	e.put("eventType", "PLAYER_LEFT_SERVER");
 	e.put("playerName", event.getPlayer().getName());
 	e.put("playerUUID", event.getPlayer().getUniqueId().toString());
-	e.put("server", serverName);
 
 	kafka.sendMessage(e);
     }
 
     @EventHandler
     public void onPlayerChat(AsyncPlayerChatEvent event) {
-	Map<String, Object> e = new HashMap<String, Object>();
+	KafkaManagerV2.Message e = this.kafka.new Message();
 	e.put("eventType", "CHAT_MESSAGE_PUBLISHED");
 	e.put("playerName", event.getPlayer().getName());
 	e.put("playerUUID", event.getPlayer().getUniqueId().toString());
-	e.put("server", serverName);
 	e.put("message", event.getMessage());
 
 	kafka.sendMessage(e);
@@ -72,11 +67,10 @@ public class PlayerListener implements Listener {
 	     Math.floor(event.getFrom().getZ()) == Math.floor(event.getTo().getZ()) )
 	    return;
 	
-	Map<String, Object> e = new HashMap<String, Object>();
+	KafkaManagerV2.Message e = this.kafka.new Message();
 	e.put("eventType", "PLAYER_MOVED");
 	e.put("playerName", event.getPlayer().getName());
 	e.put("playerUUID", event.getPlayer().getUniqueId().toString());
-	e.put("server", serverName);
 
 	e.put("fromWorld", event.getFrom().getWorld().getName());
 	e.put("fromX", event.getFrom().getX());
@@ -93,11 +87,10 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onPlayerDied(PlayerDeathEvent event) {
-	Map<String, Object> e = new HashMap<String, Object>();
+	KafkaManagerV2.Message e = this.kafka.new Message();
 	e.put("eventType", "PLAYER_DIED");
 	e.put("playerName", event.getEntity().getName());
 	e.put("playerUUID", event.getEntity().getUniqueId().toString());
-	e.put("server", serverName);
 
 	e.put("message", event.getDeathMessage());
 	
@@ -111,11 +104,10 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onPlayerEnterBed(PlayerBedEnterEvent event) {
-	Map<String, Object> e = new HashMap<String, Object>();
+	KafkaManagerV2.Message e = this.kafka.new Message();
 	e.put("eventType", "PLAYER_ENTERED_BED");
 	e.put("playerName", event.getPlayer().getName());
 	e.put("playerUUID", event.getPlayer().getUniqueId().toString());
-	e.put("server", serverName);
 
 	e.put("bedType", event.getBed().getType().toString());
 	
@@ -129,11 +121,10 @@ public class PlayerListener implements Listener {
 
     @EventHandler
     public void onPlayerLeaveBed(PlayerBedLeaveEvent event) {
-	Map<String, Object> e = new HashMap<String, Object>();
+	KafkaManagerV2.Message e = this.kafka.new Message();
 	e.put("eventType", "PLAYER_LEFT_BED");
 	e.put("playerName", event.getPlayer().getName());
 	e.put("playerUUID", event.getPlayer().getUniqueId().toString());
-	e.put("server", serverName);
 
 	e.put("bedType", event.getBed().getType().toString());
 
@@ -150,11 +141,10 @@ public class PlayerListener implements Listener {
 	if (! (event.getEntity() instanceof Player)) return;
 	Player p = (Player) event.getEntity();
 
-	Map<String, Object> e = new HashMap<String, Object>();
+	KafkaManagerV2.Message e = this.kafka.new Message();
 	e.put("eventType", "PLAYER_POTION_EFFECT");
 	e.put("playerName", p.getName());
 	e.put("playerUUID", p.getUniqueId().toString());
-	e.put("server", serverName);
 
 	e.put("action", event.getAction().toString());
 	e.put("cause", event.getCause().toString());
@@ -178,9 +168,8 @@ public class PlayerListener implements Listener {
 
 	Player p = (Player) event.getEntity();
 	
-	Map<String, Object> e = new HashMap<String, Object>();
+	KafkaManagerV2.Message e = this.kafka.new Message();
 	e.put("eventType", "PLAYER_DAMAGED");
-	e.put("server", serverName);
 	
 	e.put("playerName", p.getName());
 	e.put("playerUUID", p.getUniqueId().toString());
@@ -203,9 +192,8 @@ public class PlayerListener implements Listener {
 
 	Player p = (Player) event.getDamager();
 	
-	Map<String, Object> e = new HashMap<String, Object>();
+	KafkaManagerV2.Message e = this.kafka.new Message();
 	e.put("eventType", "PLAYER_DOES_DAMAGED");
-	e.put("server", serverName);
 	
 	e.put("playerName", p.getName());
 	e.put("playerUUID", p.getUniqueId().toString());
@@ -229,9 +217,8 @@ public class PlayerListener implements Listener {
 	Player p = (Player) event.getDamager();
 	Player attacked = (Player) event.getEntity();
 	
-	Map<String, Object> e = new HashMap<String, Object>();
+	KafkaManagerV2.Message e = this.kafka.new Message();
 	e.put("eventType", "PLAYER_DOES_DAMAGE_TO_PLAYER");
-	e.put("server", serverName);
 	
 	e.put("playerName", p.getName());
 	e.put("playerUUID", p.getUniqueId().toString());

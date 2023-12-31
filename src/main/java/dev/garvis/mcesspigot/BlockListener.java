@@ -1,6 +1,6 @@
 package dev.garvis.mcesspigot;
 
-import dev.garvis.mcesspigot.KafkaManager;
+import dev.garvis.mcesspigot.KafkaManagerV2;
 
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
@@ -13,21 +13,18 @@ import java.util.HashMap;
 
 public class BlockListener implements Listener {
 
-    private KafkaManager kafka;
-    private String serverName;
+    private KafkaManagerV2 kafka;
     
-    public BlockListener(String serverName, KafkaManager kafka) {
+    public BlockListener(KafkaManagerV2 kafka) {
 	this.kafka = kafka;
-	this.serverName = serverName;
     }
 
     @EventHandler
     public void onBlockBreak(BlockBreakEvent event) {
-	Map<String, Object> e = new HashMap<String, Object>();
+	KafkaManagerV2.Message e = this.kafka.new Message();
 	e.put("eventType", "BLOCK_BROKEN");
 	e.put("playerName", event.getPlayer().getName());
 	e.put("playerUUID", event.getPlayer().getUniqueId().toString());
-	e.put("server", serverName);
 
 	e.put("blockType", event.getBlock().getType().toString());
 
@@ -40,11 +37,10 @@ public class BlockListener implements Listener {
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
-	Map<String, Object> e = new HashMap<String, Object>();
+	KafkaManagerV2.Message e = this.kafka.new Message();
 	e.put("eventType", "BLOCK_PLACED");
 	e.put("playerName", event.getPlayer().getName());
 	e.put("playerUUID", event.getPlayer().getUniqueId().toString());
-	e.put("server", serverName);
 
 	e.put("blockType", event.getBlockPlaced().getType().toString());
 

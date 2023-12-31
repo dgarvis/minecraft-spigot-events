@@ -1,4 +1,4 @@
-name: SpigoEventstPlugin
+name: SpigotEventstPlugin
 version: 1.6
 main: dev.garvis.mcesspigot.MCESSpigotPlugin
 api-version: 1.20
