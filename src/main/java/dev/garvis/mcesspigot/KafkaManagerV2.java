@@ -217,7 +217,7 @@ public class KafkaManagerV2 {
 	}
 
 	if (consumeTopics.length > 0) {
-	    // TODO - setup consumer
+	    startConsumer(brokers, consumeTopics, consumeEvents, consumeCallback);
 	}
 	
 	// TODO
