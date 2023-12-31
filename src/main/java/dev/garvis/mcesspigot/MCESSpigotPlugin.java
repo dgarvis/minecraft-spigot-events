@@ -24,32 +24,12 @@ public class MCESSpigotPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
 	this.saveDefaultConfig();
-
-	//FileConfiguration config = getConfig();
-	//this.serverName = config.getString("serverName");
 	this.attemptToConnectToKafka();
-	//this.processBacklogMessages();
 
-	// TODO
 	getServer().getPluginManager().registerEvents(new PlayerListener(kafka), this);
 	getServer().getPluginManager().registerEvents(new BlockListener(kafka), this);
 	getServer().getPluginManager().registerEvents(new InventoryListener(kafka), this);
-
-	// https://www.spigotmc.org/threads/guide-threading-for-beginners.523773/
-	//Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
-	//	processMessages();
-	//    });
     }
-
-    /*private void processBacklogMessages() {
-	if (!this.running) return;
-
-	this.kafka.processBacklog();
-	
-	Bukkit.getScheduler().runTaskLaterAsynchronously(this, () -> {
-		processBacklogMessages();
-	    }, 20 * 60); // wait 60 second and try again. 20 ticks / second.
-	    }*/
 
     private void attemptToConnectToKafka() {
 	if (!this.running) return;
@@ -82,9 +62,10 @@ public class MCESSpigotPlugin extends JavaPlugin {
 	    kafka.connect(serverName, kafkaServer, kafkaTopic,
 			  new String[]{kafkaTopic}, events,
 			  (LinkedList<KafkaManagerV2.Message> messages) -> {
-			      for (KafkaManagerV2.Message message : messages) {
+			      /*for (KafkaManagerV2.Message message : messages) {
 				  System.out.println(message);
-			      }
+				  }*/
+			      this.processMessages(messages);
 			  });
 	    getLogger().info("Connected to Kafka");
 	} catch (Exception e) {
@@ -95,22 +76,10 @@ public class MCESSpigotPlugin extends JavaPlugin {
 	}
     }
 
-    /*private void processMessages() {
-	if (!this.running) return;
-	
-	String[] events = {
-	    "PLAYER_JOINED_SERVER",
-	    "PLAYER_DISCONNECTED",
-	    "CHAT_MESSAGE_PUBLISHED",
-	    "DISCORD_VOICE_JOINED",
-	    "DISCORD_VOICE_LEFT"
-	};
-	List<Map<String,Object>> messages = kafka.getMessages(this.serverName, Arrays.asList(events));
+    private void processMessages(LinkedList<KafkaManagerV2.Message> messages) {
 
 	Bukkit.getScheduler().runTask(this, () -> {
-		for (Map<String, Object> message : messages) {
-		    //if(message.containsKey("server") && message.get("server").equals(this.serverName)) continue;
-		    
+		for (KafkaManagerV2.Message message : messages) {
 		    System.out.println("Got Message: " + message.toString());
 
 		    // https://www.spigotmc.org/threads/the-best-way-to-send-a-message-to-all-the-players.461507/
@@ -139,11 +108,7 @@ public class MCESSpigotPlugin extends JavaPlugin {
 		    }
 		}
 	    });
-
-	Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
-		processMessages();
-	    });
-	    }*/
+    }
 
     @Override
     public void onDisable() {
