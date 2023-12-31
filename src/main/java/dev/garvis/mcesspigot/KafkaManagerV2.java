@@ -1,14 +1,25 @@
 package dev.garvis.mcesspigot;
 
 import java.util.HashMap;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Date;
 import java.util.Properties;
+import java.util.Arrays;
+
+import java.time.Duration;
 
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.ProducerConfig;
+
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+
+
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.errors.TimeoutException;
@@ -61,6 +72,18 @@ public class KafkaManagerV2 {
      * Only requried if the producer is used.
      */
     private String sendTopic;
+
+    /**
+     * Events to listen for and consume.
+     * Only requried if the consumer is used.
+     */
+    private List<String> consumeEvents;
+    
+    /**
+     * Function to pass messages to.
+     * Only requried if the consumer is used.
+     */
+    private ConsumerCallback consumeCallback;
 
     /** 
      * The kafka producer, if configured.
@@ -236,6 +259,51 @@ public class KafkaManagerV2 {
     }
 
     /**
+     * Setup and start a thread for consuming events.
+     */
+    private void startConsumer(String brokers, String[] topics,
+			       String[] events,
+			       ConsumerCallback callback) throws Exception {
+	if (this.name == null || this.name.isEmpty())
+	    throw new Exception("Name was not set on the class.");
+	if (brokers == null || brokers.isEmpty())
+	    throw new Exception("Brokers is required");
+	if (topics == null | topics.length <= 0)
+	    throw new Exception("Topic(s) to consume from are required.");
+	if (events == null || events.length <= 0)
+	    throw new Exception("Events to consumer are required.");
+	if (callback == null)
+	    throw new Exception("Callback for events is required.");
+
+	this.consumeCallback = callback;
+	this.consumeEvents = Arrays.asList(events);
+	
+	// Setup Consumer
+	Properties props = new Properties();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, brokers);
+	props.put("group.id", this.name);
+	props.put("enable.auto.commit", "true");
+	props.put("max.poll.records", 50);
+	try {
+	    props.put("key.deserializer",
+		      Class.forName("org.apache.kafka.common.serialization.StringDeserializer"));
+	    props.put("value.deserializer",
+		      Class.forName("org.apache.kafka.common.serialization.StringDeserializer"));
+	} catch(Exception e) {
+	    System.err.println("Error when setting serializers: " + e.toString());
+	    throw e; // keep throwing this.
+	}
+	
+	this.consumer = new KafkaConsumer<>(props);
+
+	// Subscribe to topics
+	this.consumer.subscribe(List.of(topics));
+
+	// Start consumer thread.
+	this.startMessageConsumer();
+    }
+
+    /**
      * Addes a message to the queue to be sent to the kafka stream.
      * This function will add / overwrite any existing `stamp` key 
      * and give it a value of the epoch time this function was called at.
@@ -340,5 +408,49 @@ public class KafkaManagerV2 {
     }
 
     private void startMessageConsumer() {
+	new Thread(() -> {
+		ObjectMapper mapper = new ObjectMapper();
+					
+		while (this.consumer != null) {
+
+		    // Get Messages
+		    ConsumerRecords<String, String> records = this.consumer.poll(Duration.ofSeconds(5));
+
+		    LinkedList<Message> messages = new LinkedList<>();
+		    
+		    // Parse Messages
+		    for (ConsumerRecord<String, String> record : records) {
+			try {
+			    Message message = (Message)mapper.readValue(record.value(), HashMap.class);
+			    // We can only handle messages with eventTypes
+			    if (!message.containsKey("eventType")) 
+				continue;
+
+			    // We don't want messages from ourself.
+			    if (message.containsKey("server") &&
+				((String)message.get("server")).equals(this.name))
+				continue;
+
+			    // We only want messages that we want to listen for.
+			    if (!this.consumeEvents.contains((String)message.get("eventType")))
+				continue;
+
+			    // Add message to queue for call back.
+			    messages.add(message);
+				
+			} catch (Exception e) {
+			    System.err.println("Error parsing mesasge: " +
+					       e.toString());
+			    // We are going to ignore this message and continue.
+			    continue;
+			}
+		    }
+
+		    // Send messages to callback
+		    if (messages.size() > 0)
+			this.consumeCallback.apply(messages);
+		}
+
+	}).start();
     }
 }
