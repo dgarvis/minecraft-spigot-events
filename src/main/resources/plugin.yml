@@ -2,3 +2,8 @@ name: SpigotEventstPlugin
 version: 1.6
 main: dev.garvis.mcesspigot.MCESSpigotPlugin
 api-version: 1.20
+commands:
+  setupspigotevents:
+    description: Saves config for the kafka events.
+    usage: /<command> name kafkaBroker kafkaTopic
+    permission: spigoteventsplugin.setup

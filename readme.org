@@ -235,7 +235,5 @@ Interaction with the plugin should be simple, where the jar file itself is just 
 for bukkit.
 
 From within the game, an op level user may use the following commands:
-- /spigotevents connect <server name> <kafka url> <kafka topic>:: Which will establish the name of the server
+- /setupspigotevents <server name> <kafka url> <kafka topic>:: Which will establish the name of the server
   and connect to the kafka system to publish and listen for messages.
-- /spigotevents disconnect :: which will clear the config.
-

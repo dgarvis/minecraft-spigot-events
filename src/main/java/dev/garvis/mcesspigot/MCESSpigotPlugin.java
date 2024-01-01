@@ -4,6 +4,7 @@ import dev.garvis.mcesspigot.KafkaManagerV2;
 import dev.garvis.mcesspigot.PlayerListener;
 import dev.garvis.mcesspigot.BlockListener;
 import dev.garvis.mcesspigot.InventoryListener;
+import dev.garvis.mcesspigot.SetupCommand;
 
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -29,6 +30,16 @@ public class MCESSpigotPlugin extends JavaPlugin {
 	getServer().getPluginManager().registerEvents(new PlayerListener(kafka), this);
 	getServer().getPluginManager().registerEvents(new BlockListener(kafka), this);
 	getServer().getPluginManager().registerEvents(new InventoryListener(kafka), this);
+
+	getCommand("setupspigotevents").
+	    setExecutor(new SetupCommand((String name, String broker, String topic) -> {
+			FileConfiguration config = getConfig();
+			config.set("kafkaServer", broker);
+			config.set("kafkaTopic", topic);
+			config.set("serverName", name);
+
+			saveConfig();
+	    }));
     }
 
     private void attemptToConnectToKafka() {
