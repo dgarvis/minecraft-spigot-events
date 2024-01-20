@@ -7,6 +7,10 @@ import dev.garvis.mcesspigot.InventoryListener;
 import dev.garvis.mcesspigot.SetupCommand;
 
 import org.bukkit.Bukkit;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.Statistic;
+import org.bukkit.entity.EntityType;
+import org.bukkit.Material;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.ChatColor;
@@ -40,6 +44,53 @@ public class MCESSpigotPlugin extends JavaPlugin {
 
 			saveConfig();
 	    }));
+
+	// TODO - make run every hour.
+	statsEvent();
+    }
+
+    private void statsEvent() {
+	for (OfflinePlayer player : Bukkit.getOfflinePlayers()) {
+	    KafkaManagerV2.Message e = this.kafka.new Message();
+	    e.put("eventType", "PLAYER_STATS");
+	    e.put("playerName", player.getName());
+	    e.put("playerUUID", player.getUniqueId().toString());
+	    for (Statistic stat : Statistic.values()) {
+		try {
+		    switch (stat) {
+		    case DROP:
+		    case PICKUP:
+		    case MINE_BLOCK:
+		    case USE_ITEM:
+		    case BREAK_ITEM:
+		    case CRAFT_ITEM:
+			for (Material mat : Material.values()) {
+			    int v = 0;
+			    try {
+				v =  player.getStatistic(stat, mat);
+			    } catch (IllegalArgumentException ex) {}
+			    e.put(stat.toString() + "_" + mat.toString(), v);
+			}
+			break;
+		    case KILL_ENTITY:
+		    case ENTITY_KILLED_BY:
+			for (EntityType entity : EntityType.values()) {
+			    int v = 0;
+			    try {
+				v =  player.getStatistic(stat, entity);
+			    } catch (IllegalArgumentException ex) {}
+			    e.put(stat.toString() + "_" + entity.toString(), v);
+			}
+			break;
+		    default:
+			e.put(stat.toString(), player.getStatistic(stat));
+		    }
+		} catch (IllegalArgumentException ex) {
+		    this.getLogger().warning("Ignoring: " + stat.toString());
+		}
+	    }
+	    this.kafka.sendMessage(e);
+	}
     }
 
     private void attemptToConnectToKafka() {
