@@ -45,8 +45,9 @@ public class MCESSpigotPlugin extends JavaPlugin {
 			saveConfig();
 	    }));
 
-	// TODO - make run every hour.
-	statsEvent();
+	Bukkit.getScheduler().runTaskTimerAsynchronously(this, () -> {
+		statsEvent();
+	    }, 20, 20 * 60 * 60); // wait 1 sec, then every 1 hour - should be a config value
     }
 
     private void statsEvent() {
