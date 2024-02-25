@@ -1,3 +1,10 @@
 kafkaServer: ""
 serverName: ""
 kafkaTopic: ""
+enableChat: true
+emitMovementEvents: true
+emitBlockEvents: true
+emitCraftEvents: true
+emitDamageEvents: true
+emitEffectEvents: true
+emitSleepEvents: true

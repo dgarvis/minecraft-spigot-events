@@ -1,8 +1,5 @@
 package dev.garvis.mcesspigot;
 
-import dev.garvis.mcesspigot.KafkaManagerV2;
-
-import org.bukkit.Bukkit;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.entity.Player;
@@ -11,14 +8,11 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.ClickType;
 
-import java.util.Map;
-import java.util.HashMap;
-
-public class InventoryListener implements Listener {
+public class CraftEvents implements Listener {
 
     private KafkaManagerV2 kafka;
     
-    public InventoryListener(KafkaManagerV2 kafka) {
+    public CraftEvents(KafkaManagerV2 kafka) {
 	this.kafka = kafka;
     }
 

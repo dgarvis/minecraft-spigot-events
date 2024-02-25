@@ -1,11 +1,5 @@
 package dev.garvis.mcesspigot;
 
-import dev.garvis.mcesspigot.KafkaManagerV2;
-import dev.garvis.mcesspigot.PlayerListener;
-import dev.garvis.mcesspigot.BlockListener;
-import dev.garvis.mcesspigot.InventoryListener;
-import dev.garvis.mcesspigot.SetupCommand;
-
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Statistic;
@@ -15,15 +9,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.ChatColor;
 
-import java.util.List;
 import java.util.LinkedList;
-import java.util.Map;
-import java.util.Arrays;
 
 public class MCESSpigotPlugin extends JavaPlugin {
     
-    private KafkaManagerV2 kafka = new KafkaManagerV2();
-    //private String serverName;
+    private final KafkaManagerV2 kafka = new KafkaManagerV2();
     private boolean running = true;
     
     @Override
@@ -31,13 +21,25 @@ public class MCESSpigotPlugin extends JavaPlugin {
 	this.saveDefaultConfig();
 	this.attemptToConnectToKafka();
 
-	getServer().getPluginManager().registerEvents(new PlayerListener(kafka), this);
-	getServer().getPluginManager().registerEvents(new BlockListener(kafka), this);
-	getServer().getPluginManager().registerEvents(new InventoryListener(kafka), this);
+	FileConfiguration config = getConfig();
+	if (config.getBoolean("enableChat", true))
+		getServer().getPluginManager().registerEvents(new ChatEvents(kafka), this);
+	if (config.getBoolean("emitMovementEvents", true))
+		getServer().getPluginManager().registerEvents(new MovementEvents(kafka), this);
+	if (config.getBoolean("emitBlockEvents", true))
+		getServer().getPluginManager().registerEvents(new BlockEvents(kafka), this);
+	if (config.getBoolean("emitCraftEvents", true))
+		getServer().getPluginManager().registerEvents(new CraftEvents(kafka), this);
+	if (config.getBoolean("emitDamageEvents", true))
+		getServer().getPluginManager().registerEvents(new DamageEvents(kafka), this);
+	if (config.getBoolean("emitEffectEvents", true))
+		getServer().getPluginManager().registerEvents(new EffectEvents(kafka), this);
+	if (config.getBoolean("emitSleepEvents", true))
+		getServer().getPluginManager().registerEvents(new SleepEvents(kafka), this);
 
 	getCommand("setupspigotevents").
 	    setExecutor(new SetupCommand((String name, String broker, String topic) -> {
-			FileConfiguration config = getConfig();
+			//FileConfiguration config = getConfig();
 			config.set("kafkaServer", broker);
 			config.set("kafkaTopic", topic);
 			config.set("serverName", name);
